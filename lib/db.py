@@ -13,9 +13,11 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+import settings
+
 
 Base = declarative_base()
-engine = create_engine('postgresql://localhost/reddit_scraper')
+engine = create_engine(settings.DB_URI)
 DBSession = sessionmaker(bind=engine)
 
 
@@ -48,6 +50,8 @@ def init_db():
 def session_scope():
     """
     Context manager for SQLAlchemy sessions
+
+    :rtype: DBSession
 
     """
     session = DBSession()

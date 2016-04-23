@@ -6,45 +6,53 @@ Scrape images from a subreddit
 
 Usage:
   reddit_scraper initialize
+  reddit_scraper backfill <subreddit> <date>
   reddit_scraper scrape <subreddit>
 
 Options:
   -h --help              Show this screen
 
 """
+from dateutil.parser import parse
+
 import sys
 
 from docopt import docopt
 
-import praw
-
-from lib.db import init_db
+from lib import api as scraper_api
 
 
 CMDARGS = docopt(__doc__)
-LIMIT = 10
-USER_AGENT = 'Reddit Scraper Script'
 
 
 def initialize():
-    result = raw_input("Warning: This will drop all tables and start the "
-                       "database over from scratch.  Are you sure you want to "
-                       "do this?  Enter 'yes' if so...\n")
+    result = raw_input(
+        "Warning: This will drop all tables and start the database over from "
+        "scratch.  Are you sure you want to do this?  Enter 'yes' if so...\n")
     if result != 'yes':
         print "exiting..."
         sys.exit()
     print "Initializing db..."
-    init_db()
+    scraper_api.init_database()
 
 
-def scrape_subreddit(subreddit_name):
-    reddit = praw.Reddit(user_agent=USER_AGENT)
-    subreddit = reddit.get_subreddit(subreddit_name)
-    for submission in subreddit.get_new(
-            limit=LIMIT, params={'after': 't3_4fp33k'}):
-        print submission.name
+def backfill(subreddit_name, date):
+    try:
+        date = parse(date)
+    except ValueError:
+        print "Bad date format"
+        sys.exit(1)
+    try:
+        scraper_api.scrape(subreddit_name, backfill_to=date)
+    except Exception as ex:
+        print str(ex)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
     if CMDARGS['initialize']:
         initialize()
+    elif CMDARGS['scrape']:
+        scraper_api.scrape(CMDARGS['<subreddit>'])
+    elif CMDARGS['backfill']:
+        backfill(CMDARGS['<subreddit>'], CMDARGS['<date>'])
