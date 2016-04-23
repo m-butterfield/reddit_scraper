@@ -5,22 +5,39 @@ reddit_scraper
 Scrape images from a subreddit
 
 Usage:
-  reddit_scraper <subreddit>
+  reddit_scraper initialize
+  reddit_scraper scrape <subreddit>
 
 Options:
   -h --help              Show this screen
 
 """
+import sys
+
 from docopt import docopt
 
 import praw
 
+from lib.db import init_db
 
-USER_AGENT = 'Reddit Scraper Script'
+
+CMDARGS = docopt(__doc__)
 LIMIT = 10
+USER_AGENT = 'Reddit Scraper Script'
 
 
-def main(subreddit_name):
+def initialize():
+    result = raw_input("Warning: This will drop all tables and start the "
+                       "database over from scratch.  Are you sure you want to "
+                       "do this?  Enter 'yes' if so...\n")
+    if result != 'yes':
+        print "exiting..."
+        sys.exit()
+    print "Initializing db..."
+    init_db()
+
+
+def scrape_subreddit(subreddit_name):
     reddit = praw.Reddit(user_agent=USER_AGENT)
     subreddit = reddit.get_subreddit(subreddit_name)
     for submission in subreddit.get_new(
@@ -29,5 +46,5 @@ def main(subreddit_name):
 
 
 if __name__ == '__main__':
-    args = docopt(__doc__)
-    main(args['<subreddit>'])
+    if CMDARGS['initialize']:
+        initialize()
