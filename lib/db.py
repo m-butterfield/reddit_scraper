@@ -25,6 +25,7 @@ class Post(Base):
 
     id = Column(String(64), primary_key=True)
     image_id = Column(String(40), ForeignKey('image.id'), nullable=False)
+    subreddit_name = Column(String(20), nullable=False, index=True)
 
 
 class Image(Base):
@@ -34,11 +35,12 @@ class Image(Base):
     id = Column(String(40), primary_key=True)
 
 
-def create_tables():
+def init_db():
     """
     Create the database tables
 
     """
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 
