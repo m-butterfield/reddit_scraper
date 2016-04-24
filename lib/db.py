@@ -47,7 +47,7 @@ def init_db():
 
 
 @contextmanager
-def session_scope():
+def db_session():
     """
     Context manager for SQLAlchemy sessions
 

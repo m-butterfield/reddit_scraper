@@ -33,7 +33,7 @@ def initialize():
         print "exiting..."
         sys.exit()
     print "Initializing db..."
-    scraper_api.init_database()
+    scraper_api.initialize_database()
 
 
 def backfill(subreddit_name, date):
