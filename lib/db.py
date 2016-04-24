@@ -5,9 +5,13 @@ Database model definitions
 from contextlib import contextmanager
 
 from sqlalchemy import (
+    BigInteger,
+    Boolean,
     Column,
+    DateTime,
     create_engine,
     ForeignKey,
+    Integer,
     String,
 )
 from sqlalchemy.ext.declarative import declarative_base
@@ -25,16 +29,24 @@ class Post(Base):
 
     __tablename__ = 'post'
 
-    id = Column(String(64), primary_key=True)
-    image_id = Column(String(40), ForeignKey('image.id'), nullable=False)
-    subreddit_name = Column(String(20), nullable=False, index=True)
+    id = Column(String, primary_key=True)
+    image_file_hash = Column(
+        String(40), ForeignKey('image.file_hash'), nullable=False)
+    subreddit_name = Column(String(20), nullable=False)
+    submitted = Column(DateTime, nullable=False)
 
 
 class Image(Base):
 
     __tablename__ = 'image'
 
-    id = Column(String(40), primary_key=True)
+    file_hash = Column(String(40), primary_key=True)
+    file_ext = Column(String, nullable=False)
+    content_type = Column(String, nullable=False)
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
+    size = Column(BigInteger, nullable=False)
+    enacted = Column(Boolean, nullable=False, default=False, index=True)
 
 
 def init_db():
