@@ -49,10 +49,18 @@ def backfill(subreddit_name, date):
         sys.exit(1)
 
 
+def scrape(subreddit_name):
+    try:
+        scraper_api.scrape(subreddit_name)
+    except Exception as ex:
+        print str(ex)
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     if CMDARGS['initialize']:
         initialize()
     elif CMDARGS['scrape']:
-        scraper_api.scrape(CMDARGS['<subreddit>'])
+        scrape(CMDARGS['<subreddit>'])
     elif CMDARGS['backfill']:
         backfill(CMDARGS['<subreddit>'], CMDARGS['<date>'])
