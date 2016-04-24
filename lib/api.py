@@ -46,7 +46,7 @@ def scrape(subreddit_name, backfill_to=None):
             _backfill(
                 session, subreddit, subreddit_name, imgur_client, backfill_to)
         else:
-            _scrape(session, subreddit, imgur_client)
+            _scrape(session, subreddit, subreddit_name, imgur_client)
 
 
 def _backfill(session, subreddit, subreddit_name, imgur_client, backfill_to):
@@ -64,10 +64,31 @@ def _backfill(session, subreddit, subreddit_name, imgur_client, backfill_to):
             limit=PAGINATION_LIMIT, params={'after': submission.name})]
 
 
-def _scrape(session, subreddit, imgur_client):
-    for submission in subreddit.get_new(
-            limit=PAGINATION_LIMIT, params={'before': 't3_4fp33k'}):
-        print submission.name
+def _scrape(session, subreddit, subreddit_name, imgur_client):
+    latest_scraped = _get_latest_scraped_post(session, subreddit_name)
+
+    if latest_scraped is None:
+        raise ValueError(
+            "No scraped posts for this subreddit, you must backfill first.")
+
+    submissions = [s for s in subreddit.get_new(
+        limit=PAGINATION_LIMIT, params={'before': latest_scraped.name})]
+    while submissions:
+        for submission in reversed(submissions):
+            _handle_submission(session,
+                               submission,
+                               imgur_client,
+                               subreddit_name,
+                               datetime.fromtimestamp(submission.created_utc))
+        submissions = [s for s in subreddit.get_new(
+            limit=PAGINATION_LIMIT, params={'before': submission.name})]
+    print "Subreddit {} up to date...".format(subreddit_name)
+
+
+def _get_latest_scraped_post(session, subreddit_name):
+    return (session.query(Post)
+            .filter(Post.subreddit_name == subreddit_name)
+            .order_by(Post.submitted.desc()).first())
 
 
 def _handle_submission(session,
@@ -98,7 +119,8 @@ def _handle_submission(session,
         print "Could not download image: {}".format(ex)
         return
 
-    print "Downloading image for post: {}".format(submission.name)
+    print "Downloading image for post: {} - Submitted {}".format(
+        submission.name, created)
     with NamedTemporaryFile() as fp:
         for chunk in response.iter_content(1024):
             fp.write(chunk)

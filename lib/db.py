@@ -32,8 +32,8 @@ class Post(Base):
     name = Column(String, primary_key=True)
     image_file_hash = Column(
         String(40), ForeignKey('image.file_hash'), nullable=False)
-    subreddit_name = Column(String(20), nullable=False)
-    submitted = Column(DateTime, nullable=False, index=True)
+    subreddit_name = Column(String(20), nullable=False, index=True)
+    submitted = Column(DateTime, nullable=False)
 
 
 class Image(Base):
