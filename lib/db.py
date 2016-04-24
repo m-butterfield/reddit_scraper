@@ -29,11 +29,11 @@ class Post(Base):
 
     __tablename__ = 'post'
 
-    id = Column(String, primary_key=True)
+    name = Column(String, primary_key=True)
     image_file_hash = Column(
         String(40), ForeignKey('image.file_hash'), nullable=False)
     subreddit_name = Column(String(20), nullable=False)
-    submitted = Column(DateTime, nullable=False)
+    submitted = Column(DateTime, nullable=False, index=True)
 
 
 class Image(Base):

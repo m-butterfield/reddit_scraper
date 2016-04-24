@@ -42,7 +42,7 @@ def scrape(subreddit_name, backfill_to=None):
     reddit = Reddit(user_agent=settings.REDDIT_USER_AGENT)
     subreddit = reddit.get_subreddit(subreddit_name)
     with db_session() as session:
-        if backfill_to:
+        if backfill_to is not None:
             _backfill(
                 session, subreddit, subreddit_name, imgur_client, backfill_to)
         else:
@@ -75,7 +75,7 @@ def _handle_submission(session,
                        imgur_client,
                        subreddit_name,
                        created):
-    if _get_post(session, submission.id) is not None:
+    if _get_post(session, submission.name) is not None:
         print "Post {} already saved...".format(submission.name)
         return
 
@@ -98,7 +98,7 @@ def _handle_submission(session,
         print "Could not download image: {}".format(ex)
         return
 
-    print "Downloading image for post: {}".format(submission.id)
+    print "Downloading image for post: {}".format(submission.name)
     with NamedTemporaryFile() as fp:
         for chunk in response.iter_content(1024):
             fp.write(chunk)
@@ -106,11 +106,11 @@ def _handle_submission(session,
         file_hash = _get_file_hash(fp)
         image = _get_or_create_image(
             session, fp, imgur_image, file_hash, subreddit_name)
-    print "Saving post {}".format(submission.id)
-    session.add(Post(id=submission.id,
-                image_file_hash=image.file_hash,
-                submitted=created,
-                subreddit_name=subreddit_name))
+    print "Saving post {}".format(submission.name)
+    session.add(Post(name=submission.name,
+                     image_file_hash=image.file_hash,
+                     submitted=created,
+                     subreddit_name=subreddit_name))
     session.commit()
 
 
