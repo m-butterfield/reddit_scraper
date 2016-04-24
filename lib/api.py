@@ -22,7 +22,7 @@ from .db import db_session, init_db, Post, Image
 import settings
 
 
-PAGINATION_LIMIT = 5
+PAGINATION_LIMIT = 25
 
 
 initialize_database = init_db
