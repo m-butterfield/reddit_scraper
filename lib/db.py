@@ -15,7 +15,7 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 
 import settings
 
@@ -30,10 +30,13 @@ class Post(Base):
     __tablename__ = 'post'
 
     name = Column(String, primary_key=True)
-    image_file_hash = Column(
-        String(40), ForeignKey('image.file_hash'), nullable=False)
+    image_file_hash = Column(String(40),
+                             ForeignKey('image.file_hash', ondelete='cascade'),
+                             nullable=False)
     subreddit_name = Column(String(20), nullable=False, index=True)
     submitted = Column(DateTime, nullable=False)
+
+    image = relationship("Image", backref="posts")
 
 
 class Image(Base):
