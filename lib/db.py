@@ -2,8 +2,6 @@
 Database model definitions
 
 """
-import os
-
 from contextlib import contextmanager
 
 from sqlalchemy import (
