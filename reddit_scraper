@@ -22,9 +22,6 @@ from docopt import docopt
 from lib import api as scraper_api
 
 
-CMDARGS = docopt(__doc__)
-
-
 def initialize():
     result = raw_input(
         "Warning: This will drop all tables and start the database over from "
@@ -58,6 +55,7 @@ def scrape(subreddit_name):
 
 
 if __name__ == '__main__':
+    CMDARGS = docopt(__doc__)
     if CMDARGS['initialize']:
         initialize()
     elif CMDARGS['scrape']:
