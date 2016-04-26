@@ -1,3 +1,7 @@
+"""
+Project settings
+
+"""
 import os
 
 
