@@ -39,7 +39,7 @@ class Post(Base):
     submitted = Column(DateTime, nullable=False)
     enacted = Column(Boolean, nullable=False, default=False, index=True)
 
-    image = relationship("Image", backref="posts")
+    image = relationship("Image", lazy='joined', backref="posts")
 
 
 class Image(Base):
