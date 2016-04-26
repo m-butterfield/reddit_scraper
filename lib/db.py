@@ -57,10 +57,6 @@ class Image(Base):
     def file_name(self):
         return self.file_hash + self.file_ext
 
-    @property
-    def file_path(self):
-        return os.path.join(settings.IMAGES_FOLDER_PATH, self.file_name)
-
 
 def init_db():
     """
