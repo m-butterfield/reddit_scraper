@@ -127,7 +127,7 @@ def _handle_submission(session,
         fp.seek(0)
         file_hash = _get_file_hash(fp)
         image = _get_or_create_image(
-            session, fp, imgur_image, file_hash, subreddit_name)
+            session, fp, imgur_image, file_hash)
     print "Saving post {}".format(submission.name)
     session.add(Post(name=submission.name,
                      image_file_hash=image.file_hash,
@@ -140,16 +140,15 @@ def _get_post(session, submission_id):
     return session.query(Post).get(submission_id)
 
 
-def _get_or_create_image(session, fp, imgur_image, file_hash, subreddit_name):
+def _get_or_create_image(session, fp, imgur_image, file_hash):
     existing_image = session.query(Image).get(file_hash)
     if existing_image:
         return existing_image
     file_ext = os.path.splitext(imgur_image.link)[1]
     file_name = file_hash + file_ext
-    folder_path = os.path.join(settings.IMAGES_FOLDER_PATH, subreddit_name)
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    shutil.copy(fp.name, os.path.join(folder_path, file_name))
+    if not os.path.exists(settings.IMAGES_FOLDER_PATH):
+        os.mkdir(settings.IMAGES_FOLDER_PATH)
+    shutil.copy(fp.name, os.path.join(settings.IMAGES_FOLDER_PATH, file_name))
     image = Image(file_hash=file_hash,
                   file_ext=file_ext,
                   content_type=imgur_image.type,
