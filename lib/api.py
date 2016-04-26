@@ -102,7 +102,7 @@ def _handle_submission(session,
 
     uri = urlparse(submission.url)
     if 'imgur.com' not in uri.netloc:
-        print "Submission not from imgur, skipping..."
+        print "Submission {} not from imgur, skipping...".format(submission.id)
         return
 
     image_id = os.path.basename(os.path.splitext(uri.path)[0])
