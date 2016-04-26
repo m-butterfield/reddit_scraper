@@ -2,6 +2,8 @@
 Database model definitions
 
 """
+import os
+
 from contextlib import contextmanager
 
 from sqlalchemy import (
@@ -35,6 +37,7 @@ class Post(Base):
                              nullable=False)
     subreddit_name = Column(String(20), nullable=False, index=True)
     submitted = Column(DateTime, nullable=False)
+    enacted = Column(Boolean, nullable=False, default=False, index=True)
 
     image = relationship("Image", backref="posts")
 
@@ -49,7 +52,14 @@ class Image(Base):
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
     size = Column(BigInteger, nullable=False)
-    enacted = Column(Boolean, nullable=False, default=False, index=True)
+
+    @property
+    def file_name(self):
+        return self.file_hash + self.file_ext
+
+    @property
+    def file_path(self):
+        return os.path.join(settings.IMAGES_FOLDER_PATH, self.file_name)
 
 
 def init_db():
