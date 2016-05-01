@@ -1,22 +1,32 @@
 """
-Reddit scraper tests
+Reddit scraper tests.
 
 """
 import unittest
 
-from db import create_tables, drop_tables
+from datetime import datetime, timedelta
+
+import db
+import reddit_scraper
 
 
 class BaseDBTestCase(unittest.TestCase):
 
     def setUp(self):
-        create_tables()
+        db.create_tables()
 
     def tearDown(self):
-        drop_tables()
+        db.drop_tables()
 
 
-class TestAPI(BaseDBTestCase):
+class TestBackfill(BaseDBTestCase):
 
-    def test_api(self):
-        pass
+    def test_backfill_subreddit(self):
+        backfill_to = datetime.utcnow() - timedelta(days=3)
+        # reddit_scraper.scrape('blah', backfill_to=backfill_to)
+
+
+class TestScrape(BaseDBTestCase):
+
+    def test_scrape_no_backfill(self):
+        self.assertRaises(ValueError, reddit_scraper.scrape, 'blah')
