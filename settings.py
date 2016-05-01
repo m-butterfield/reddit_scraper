@@ -5,7 +5,7 @@ Project settings
 import os
 
 
-DB_URI = 'postgresql://localhost/reddit_scraper'
+DB_URI = os.getenv("REDDIT_SCRAPER_DB_URI")
 
 REDDIT_USER_AGENT = 'Reddit Scraper Script'
 

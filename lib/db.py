@@ -58,11 +58,27 @@ class Image(Base):
 
 def init_db():
     """
+    Drop and create the database tables
+
+    """
+    drop_tables()
+    create_tables()
+
+
+def create_tables():
+    """
     Create the database tables
 
     """
-    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+
+
+def drop_tables():
+    """
+    Drop the database tables
+
+    """
+    Base.metadata.drop_all(engine)
 
 
 @contextmanager
