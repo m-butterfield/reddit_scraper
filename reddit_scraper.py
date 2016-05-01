@@ -1,5 +1,5 @@
 """
-Scrape images from a subreddit
+Scrape images from a subreddit.
 
 """
 import hashlib

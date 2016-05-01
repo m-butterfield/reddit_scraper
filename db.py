@@ -1,5 +1,5 @@
 """
-Database model definitions
+Database model definitions and helper functions.
 
 """
 from contextlib import contextmanager
@@ -58,7 +58,7 @@ class Image(Base):
 
 def init_db():
     """
-    Drop and create the database tables
+    Drop existing tables if needed and create new ones.
 
     """
     drop_tables()
@@ -67,7 +67,7 @@ def init_db():
 
 def create_tables():
     """
-    Create the database tables
+    Create the database tables.
 
     """
     Base.metadata.create_all(engine)
@@ -75,7 +75,7 @@ def create_tables():
 
 def drop_tables():
     """
-    Drop the database tables
+    Drop the database tables.
 
     """
     Base.metadata.drop_all(engine)
@@ -84,7 +84,7 @@ def drop_tables():
 @contextmanager
 def db_session():
     """
-    Context manager for SQLAlchemy sessions
+    Context manager for getting/committing/closing a SQLAlchemy db session.
 
     :rtype: DBSession
 

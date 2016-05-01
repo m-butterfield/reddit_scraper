@@ -2,7 +2,7 @@
 """
 reddit_scraper
 
-Scrape images from a subreddit
+Scrape images from a subreddit.
 
 Usage:
   reddit_scraper initialize
@@ -19,6 +19,7 @@ import sys
 
 from docopt import docopt
 
+import db
 import reddit_scraper
 
 
@@ -30,7 +31,7 @@ def initialize():
         print "exiting..."
         sys.exit()
     print "Initializing db..."
-    reddit_scraper.initialize_database()
+    db.init_db()
 
 
 def backfill(subreddit_name, date):
