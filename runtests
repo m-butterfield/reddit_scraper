@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+RUNNING_TESTS=true
+nosetests -v $1
