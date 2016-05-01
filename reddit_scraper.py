@@ -1,5 +1,5 @@
 """
-Python API for reddit_scraper
+Scrape images from a subreddit
 
 """
 import hashlib
@@ -17,15 +17,12 @@ from imgurpython.helpers.error import ImgurClientError
 
 from praw import Reddit
 
-from .db import db_session, init_db, Post, Image
+from db import db_session, Image, Post
 
 import settings
 
 
 PAGINATION_LIMIT = 25
-
-
-initialize_database = init_db
 
 
 def scrape(subreddit_name, backfill_to=None):

@@ -19,7 +19,7 @@ import sys
 
 from docopt import docopt
 
-from lib import api as scraper_api
+import reddit_scraper
 
 
 def initialize():
@@ -30,7 +30,7 @@ def initialize():
         print "exiting..."
         sys.exit()
     print "Initializing db..."
-    scraper_api.initialize_database()
+    reddit_scraper.initialize_database()
 
 
 def backfill(subreddit_name, date):
@@ -40,7 +40,7 @@ def backfill(subreddit_name, date):
         print "Bad date format"
         sys.exit(1)
     try:
-        scraper_api.scrape(subreddit_name, backfill_to=date)
+        reddit_scraper.scrape(subreddit_name, backfill_to=date)
     except Exception as ex:
         print str(ex)
         sys.exit(1)
@@ -48,7 +48,7 @@ def backfill(subreddit_name, date):
 
 def scrape(subreddit_name):
     try:
-        scraper_api.scrape(subreddit_name)
+        reddit_scraper.scrape(subreddit_name)
     except Exception as ex:
         print str(ex)
         sys.exit(1)
