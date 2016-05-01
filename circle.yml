@@ -1,6 +1,6 @@
 test:
     override:
-        - nosetests --with-coverage
+        - pip install coverage && nosetests --with-coverage
     post:
         - pip install codecov && codecov
 deployment:
