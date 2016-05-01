@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
+
 REDDIT_SCRAPER_DB_URI="${REDDIT_SCRAPER_DB_URI}_test"
 
+
 echo "Creating test database..."
-createdb $REDDIT_SCRAPER_DB_URI
+createdb ${REDDIT_SCRAPER_DB_URI##*/}
 
 nosetests -v $1
 
 echo "Dropping test database..."
-dropdb $REDDIT_SCRAPER_DB_URI
+dropdb ${REDDIT_SCRAPER_DB_URI##*/}
