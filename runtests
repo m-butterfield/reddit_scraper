@@ -2,6 +2,7 @@
 
 
 REDDIT_SCRAPER_DB_URI="${REDDIT_SCRAPER_DB_URI}_test"
+REDDIT_SCRAPER_IMAGES_PATH="${REDDIT_SCRAPER_IMAGES_PATH}_test"
 
 
 echo "Creating test database..."
@@ -11,3 +12,6 @@ nosetests -v $1
 
 echo "Dropping test database..."
 dropdb ${REDDIT_SCRAPER_DB_URI##*/}
+
+echo "Removing test image directory"
+rm -rf $REDDIT_SCRAPER_IMAGES_PATH
