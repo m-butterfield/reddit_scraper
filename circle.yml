@@ -1,3 +1,5 @@
 test:
+    override:
+        - nosetests --with-coverage
     post:
         - pip install codecov && codecov
