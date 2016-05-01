@@ -1,5 +1,0 @@
-test:
-    override:
-        - pip install coverage && nosetests --with-coverage
-    post:
-        - pip install codecov && codecov
