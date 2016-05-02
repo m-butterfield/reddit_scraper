@@ -25,6 +25,13 @@ import settings
 PAGINATION_LIMIT = 25
 
 
+class NoBackfillError(Exception):
+    """
+    Raise when trying to scrape a subreddit that has not yet been backfilled.
+
+    """
+
+
 def scrape(subreddit_name, backfill_to=None):
     """
     Scrape a subreddit.
@@ -65,7 +72,7 @@ def _scrape(session, subreddit, subreddit_name, imgur_client):
     latest_scraped = _get_latest_scraped_post(session, subreddit_name)
 
     if latest_scraped is None:
-        raise ValueError(
+        raise NoBackfillError(
             "No scraped posts for this subreddit, you must backfill first.")
 
     submissions = [s for s in subreddit.get_new(
