@@ -82,7 +82,7 @@ def drop_tables():
 
 
 @contextmanager
-def db_session():
+def session_manager():
     """
     Context manager for getting/committing/closing a SQLAlchemy db session.
 

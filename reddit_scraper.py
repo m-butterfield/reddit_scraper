@@ -17,7 +17,7 @@ from imgurpython.helpers.error import ImgurClientError
 
 from praw import Reddit
 
-from db import db_session, Image, Post
+from db import session_manager, Image, Post
 
 import settings
 
@@ -45,7 +45,7 @@ def scrape(subreddit_name, backfill_to=None):
         settings.IMGUR_CLIENT_ID, settings.IMGUR_CLIENT_SECRET)
     reddit = Reddit(user_agent=settings.REDDIT_USER_AGENT)
     subreddit = reddit.get_subreddit(subreddit_name)
-    with db_session() as session:
+    with session_manager() as session:
         if backfill_to is not None:
             _backfill(
                 session, subreddit, subreddit_name, imgur_client, backfill_to)
