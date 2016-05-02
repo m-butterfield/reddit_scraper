@@ -2,6 +2,7 @@
 Reddit scraper tests.
 
 """
+import hashlib
 import mock
 import unittest
 
@@ -13,9 +14,11 @@ from praw.objects import Subreddit
 
 import reddit_scraper
 
-from db import create_tables, drop_tables, Post, session_manager
+from db import create_tables, drop_tables, Image, Post, session_manager
 
 
+FILE_CONTENT = 'stuff'
+FILE_HASH = hashlib.sha1(FILE_CONTENT).hexdigest()
 FAKE_IMGUR_URL = 'http://imgur.com/123abc.jpg'
 
 
@@ -46,7 +49,7 @@ class FakeResponse(object):
         self.status_code = status_code
 
     def iter_content(self, size):
-        return ['stuff']
+        return [FILE_CONTENT]
 
     def json(self):
         return {}
@@ -112,6 +115,29 @@ class TestBackfill(BaseDBTestCase):
 
 class TestScrape(BaseDBTestCase):
 
-    def test_scrape_no_backfill(self):
-        self.assertRaises(
-            reddit_scraper.NoBackfillError, reddit_scraper.scrape, 'blah')
+    def setUp(self):
+        super(TestScrape, self).setUp()
+        self.subreddit_name = 'blah'
+        with session_manager() as session:
+            image = Image(file_hash=FILE_HASH,
+                          file_ext='.jpg',
+                          content_type='image/jpeg',
+                          width=100,
+                          height=150,
+                          size=1024)
+            session.add(image)
+            session.add(Post(name='blah',
+                             image_file_hash=image.file_hash,
+                             submitted=datetime.now(),
+                             subreddit_name=self.subreddit_name))
+
+    @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
+    def test_scrape_no_backfill(self, _fake_get):
+        self.assertRaises(reddit_scraper.NoBackfillError,
+                          reddit_scraper.scrape,
+                          self.subreddit_name + '_derp')
+
+    @mock.patch.object(Subreddit, 'get_new')
+    @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
+    def test_scrape_subreddit_up_to_date(self, fake_get, fake_get_new):
+        reddit_scraper.scrape('blah')
