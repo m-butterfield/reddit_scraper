@@ -19,15 +19,6 @@ from db import create_tables, drop_tables, Post, session_manager
 FAKE_IMGUR_URL = 'http://imgur.com/123abc.jpg'
 
 
-class BaseDBTestCase(unittest.TestCase):
-
-    def setUp(self):
-        create_tables()
-
-    def tearDown(self):
-        drop_tables()
-
-
 class FakeImage(object):
 
     type = 'image/jpeg'
@@ -68,27 +59,55 @@ def _fake_get(*args, **kwargs):
     return FakeResponse()
 
 
+def _make_get_new_func(first_batch, second_batch):
+    """
+    Create a function to replace PRAW Subreddit's get_new().  Assumes the first
+    time the function is called, the 'params' argument will not be passed,
+    therefore only returning the first batch of submissions, then when 'params'
+    is passed, the second batch will be returned.
+
+    :type first_batch: list
+    :type second_batch: list
+
+    :rtype: function
+
+    """
+    def func(limit, params=None):
+        if params is None:
+            return first_batch
+        return second_batch
+    return func
+
+
+class BaseDBTestCase(unittest.TestCase):
+
+    def setUp(self):
+        create_tables()
+
+    def tearDown(self):
+        drop_tables()
+
+
 class TestBackfill(BaseDBTestCase):
 
     @mock.patch.object(Subreddit, 'get_new')
     @mock.patch.object(ImgurClient, 'get_image')
-    def test_backfill_subreddit(self, fake_get_image, fake_get_new):
+    @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
+    def test_backfill_subreddit(self, fake_get, fake_get_image, fake_get_new):
         backfill_to = datetime.now()
-
-        new_submission = FakeSubmission(
+        submission = FakeSubmission(
             backfill_to + timedelta(seconds=1), 'new submission')
-        old_submission = FakeSubmission(backfill_to - timedelta(seconds=1))
-        fake_submissions = [new_submission, old_submission]
-        fake_get_new.return_value = fake_submissions
+
+        fake_get_new.side_effect = _make_get_new_func(
+            [submission], [FakeSubmission(backfill_to - timedelta(seconds=1))])
 
         fake_get_image.return_value = FakeImage()
 
-        with mock.patch('reddit_scraper.requests.get', side_effect=_fake_get):
-            reddit_scraper.scrape('blah', backfill_to=backfill_to)
+        reddit_scraper.scrape('blah', backfill_to=backfill_to)
 
         with session_manager() as session:
             post = session.query(Post).one()
-            self.assertEqual(post.name, new_submission.name)
+            self.assertEqual(post.name, submission.name)
 
 
 class TestScrape(BaseDBTestCase):

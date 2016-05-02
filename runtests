@@ -8,7 +8,7 @@ REDDIT_SCRAPER_IMAGES_PATH="${REDDIT_SCRAPER_IMAGES_PATH}_test"
 echo "Creating test database..."
 createdb ${REDDIT_SCRAPER_DB_URI##*/}
 
-nosetests -sv $1
+nosetests -v $1
 
 echo "Dropping test database..."
 dropdb ${REDDIT_SCRAPER_DB_URI##*/}
