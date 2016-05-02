@@ -152,7 +152,7 @@ def _get_or_create_image(session, fp, imgur_image, file_hash):
     file_ext = os.path.splitext(imgur_image.link)[1]
     file_name = file_hash + file_ext
     if not os.path.exists(settings.IMAGES_FOLDER_PATH):
-        os.mkdir(settings.IMAGES_FOLDER_PATH)
+        os.makedirs(settings.IMAGES_FOLDER_PATH)
     shutil.copy(fp.name, os.path.join(settings.IMAGES_FOLDER_PATH, file_name))
     image = Image(file_hash=file_hash,
                   file_ext=file_ext,
