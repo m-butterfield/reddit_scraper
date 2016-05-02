@@ -139,5 +139,7 @@ class TestScrape(BaseDBTestCase):
 
     @mock.patch.object(Subreddit, 'get_new')
     @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
-    def test_scrape_subreddit_up_to_date(self, fake_get, fake_get_new):
+    @mock.patch('reddit_scraper._handle_submission')
+    def test_scrape_up_to_date(self, fake_handle, fake_get, fake_get_new):
         reddit_scraper.scrape('blah')
+        fake_handle.assert_not_called()
