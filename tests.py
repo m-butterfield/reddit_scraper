@@ -11,8 +11,9 @@ from imgurpython import ImgurClient
 
 from praw.objects import Subreddit
 
-import db
 import reddit_scraper
+
+from db import create_tables, drop_tables, Post, session_manager
 
 
 FAKE_IMGUR_URL = 'http://imgur.com/123abc.jpg'
@@ -21,10 +22,10 @@ FAKE_IMGUR_URL = 'http://imgur.com/123abc.jpg'
 class BaseDBTestCase(unittest.TestCase):
 
     def setUp(self):
-        db.create_tables()
+        create_tables()
 
     def tearDown(self):
-        db.drop_tables()
+        drop_tables()
 
 
 class FakeImage(object):
@@ -74,7 +75,8 @@ class TestBackfill(BaseDBTestCase):
     def test_backfill_subreddit(self, fake_get_image, fake_get_new):
         backfill_to = datetime.now()
 
-        new_submission = FakeSubmission(backfill_to + timedelta(seconds=1))
+        new_submission = FakeSubmission(
+            backfill_to + timedelta(seconds=1), 'new submission')
         old_submission = FakeSubmission(backfill_to - timedelta(seconds=1))
         fake_submissions = [new_submission, old_submission]
         fake_get_new.return_value = fake_submissions
@@ -83,6 +85,10 @@ class TestBackfill(BaseDBTestCase):
 
         with mock.patch('reddit_scraper.requests.get', side_effect=_fake_get):
             reddit_scraper.scrape('blah', backfill_to=backfill_to)
+
+        with session_manager() as session:
+            post = session.query(Post).one()
+            self.assertEqual(post.name, new_submission.name)
 
 
 class TestScrape(BaseDBTestCase):
