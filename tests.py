@@ -13,6 +13,7 @@ from imgurpython import ImgurClient
 from praw.objects import Subreddit
 
 import reddit_scraper
+import settings
 
 from db import create_tables, drop_tables, Image, Post, session_manager
 
