@@ -161,3 +161,11 @@ class TestScrape(BaseDBTestCase):
         with session_manager() as session:
             image = session.query(Image).one()
             self.assertEqual(image.file_hash, self.image_file_hash)
+
+    @mock.patch.object(Subreddit, 'get_new')
+    @mock.patch.object(ImgurClient, 'get_image')
+    def test_scrape_unknown_image_source(self, fake_get_image, fake_get_new):
+        fake_get_new.side_effect = [
+            [FakeSubmission(name='blerg', url='http://blah.com/img.jpg')], []]
+        reddit_scraper.scrape(self.subreddit_name)
+        fake_get_image.assert_not_called()
