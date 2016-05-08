@@ -1,4 +1,4 @@
 .idea/
-*.pyc
 enact
+reddit_scraper
 scraped_images/
