@@ -13,6 +13,8 @@ from imgurpython.helpers.error import ImgurClientError
 
 from praw.objects import Subreddit
 
+import requests
+
 from sqlalchemy.engine.reflection import Inspector
 
 import reddit_scraper
@@ -77,6 +79,10 @@ def _fake_get(*args, **kwargs):
 
 def _imgur_error(imgur_id):
     raise ImgurClientError('blah')
+
+
+def _requests_error():
+    raise requests.HTTPError()
 
 
 class TestDBInit(unittest.TestCase):
@@ -181,5 +187,20 @@ class TestScrape(BaseDBTestCase):
     def test_scrape_imgur_error(self, fake_save, fake_get_image, fake_get_new):
         fake_get_new.side_effect = [[FakeSubmission(name='blerg')], []]
         fake_get_image.side_effect = _imgur_error
+        reddit_scraper.scrape(self.subreddit_name)
+        fake_save.assert_not_called()
+
+    @mock.patch.object(Subreddit, 'get_new')
+    @mock.patch.object(ImgurClient, 'get_image')
+    @mock.patch.object(requests.Response, 'raise_for_status')
+    @mock.patch('reddit_scraper._save_post')
+    def test_scrape_http_error(self,
+                               fake_save,
+                               fake_raise,
+                               fake_get_image,
+                               fake_get_new):
+        fake_get_new.side_effect = [[FakeSubmission(name='blerg')], []]
+        fake_get_image.return_value = FakeImage()
+        fake_raise.side_effect = _requests_error
         reddit_scraper.scrape(self.subreddit_name)
         fake_save.assert_not_called()
