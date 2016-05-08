@@ -12,9 +12,19 @@ from imgurpython import ImgurClient
 
 from praw.objects import Subreddit
 
+from sqlalchemy.engine.reflection import Inspector
+
 import reddit_scraper
 
-from db import create_tables, drop_tables, Image, Post, session_manager
+from db import (
+    create_tables,
+    drop_tables,
+    engine,
+    Image,
+    init_db,
+    Post,
+    session_manager,
+)
 
 
 FILE_CONTENT = 'stuff'
@@ -62,6 +72,15 @@ class FakeResponse(object):
 
 def _fake_get(*args, **kwargs):
     return FakeResponse()
+
+
+class TestDBInit(unittest.TestCase):
+
+    def test_init_db(self):
+        init_db()
+        inspector = Inspector.from_engine(engine)
+        self.assertEqual({'image', 'post'}, set(inspector.get_table_names()))
+        drop_tables()
 
 
 class BaseDBTestCase(unittest.TestCase):
