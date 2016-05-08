@@ -64,26 +64,6 @@ def _fake_get(*args, **kwargs):
     return FakeResponse()
 
 
-def _make_get_new_func(first_batch, second_batch):
-    """
-    Create a function to replace PRAW Subreddit's get_new().  Assumes the first
-    time the function is called, the 'params' argument will not be passed,
-    therefore only returning the first batch of submissions, then when 'params'
-    is passed, the second batch will be returned.
-
-    :type first_batch: list
-    :type second_batch: list
-
-    :rtype: function
-
-    """
-    def func(limit, params=None):
-        if params is None:
-            return first_batch
-        return second_batch
-    return func
-
-
 class BaseDBTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -102,10 +82,8 @@ class TestBackfill(BaseDBTestCase):
         backfill_to = datetime.now()
         submission = FakeSubmission(
             backfill_to + timedelta(seconds=1), 'new submission')
-
-        fake_get_new.side_effect = _make_get_new_func(
-            [submission], [FakeSubmission(backfill_to - timedelta(seconds=1))])
-
+        fake_get_new.side_effect = [
+            [submission], [FakeSubmission(backfill_to - timedelta(seconds=1))]]
         fake_get_image.return_value = FakeImage()
 
         reddit_scraper.scrape('blah', backfill_to=backfill_to)
@@ -147,6 +125,5 @@ class TestScrape(BaseDBTestCase):
 
     @mock.patch.object(Subreddit, 'get_new')
     def test_scrape_post_exists(self, fake_get_new):
-        fake_get_new.side_effect = _make_get_new_func(
-            [FakeSubmission(name=self.post_name)], [])
+        fake_get_new.side_effect = [[FakeSubmission(name=self.post_name)], []]
         reddit_scraper.scrape(self.subreddit_name)
