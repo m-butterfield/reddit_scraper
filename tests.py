@@ -13,7 +13,6 @@ from imgurpython import ImgurClient
 from praw.objects import Subreddit
 
 import reddit_scraper
-import settings
 
 from db import create_tables, drop_tables, Image, Post, session_manager
 
@@ -36,7 +35,9 @@ class FakeImage(object):
 
 class FakeSubmission(object):
 
-    def __init__(self, created_utc, name='', url=FAKE_IMGUR_URL):
+    def __init__(self, created_utc=None, name='', url=FAKE_IMGUR_URL):
+        if created_utc is None:
+            created_utc = datetime.utcnow()
         self.created_utc = int(created_utc.strftime('%s'))
         self.name = name
         self.url = url
@@ -119,28 +120,33 @@ class TestScrape(BaseDBTestCase):
     def setUp(self):
         super(TestScrape, self).setUp()
         self.subreddit_name = 'blah'
+        self.image_file_hash = FILE_HASH
+        self.post_name = 'post'
         with session_manager() as session:
-            image = Image(file_hash=FILE_HASH,
-                          file_ext='.jpg',
-                          content_type='image/jpeg',
-                          width=100,
-                          height=150,
-                          size=1024)
-            session.add(image)
-            session.add(Post(name='blah',
-                             image_file_hash=image.file_hash,
+            session.add(Image(file_hash=self.image_file_hash,
+                              file_ext='.jpg',
+                              content_type='image/jpeg',
+                              width=100,
+                              height=150,
+                              size=1024))
+            session.add(Post(name=self.post_name,
+                             image_file_hash=self.image_file_hash,
                              submitted=datetime.now(),
                              subreddit_name=self.subreddit_name))
 
-    @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
-    def test_scrape_no_backfill(self, _fake_get):
+    def test_scrape_no_backfill(self):
         self.assertRaises(reddit_scraper.NoBackfillError,
                           reddit_scraper.scrape,
                           self.subreddit_name + '_derp')
 
     @mock.patch.object(Subreddit, 'get_new')
-    @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
     @mock.patch('reddit_scraper._handle_submission')
-    def test_scrape_up_to_date(self, fake_handle, fake_get, fake_get_new):
-        reddit_scraper.scrape('blah')
+    def test_scrape_up_to_date(self, fake_handle, fake_get_new):
+        reddit_scraper.scrape(self.subreddit_name)
         fake_handle.assert_not_called()
+
+    @mock.patch.object(Subreddit, 'get_new')
+    def test_scrape_post_exists(self, fake_get_new):
+        fake_get_new.side_effect = _make_get_new_func(
+            [FakeSubmission(name=self.post_name)], [])
+        reddit_scraper.scrape(self.subreddit_name)
