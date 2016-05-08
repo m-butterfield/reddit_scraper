@@ -77,8 +77,9 @@ class TestBackfill(BaseDBTestCase):
 
     @mock.patch.object(Subreddit, 'get_new')
     @mock.patch.object(ImgurClient, 'get_image')
-    @mock.patch('reddit_scraper.requests.get', side_effect=_fake_get)
+    @mock.patch('reddit_scraper.requests.get')
     def test_backfill_subreddit(self, fake_get, fake_get_image, fake_get_new):
+        fake_get.side_effect = _fake_get
         backfill_to = datetime.now()
         submission = FakeSubmission(
             backfill_to + timedelta(seconds=1), 'new submission')
@@ -91,6 +92,8 @@ class TestBackfill(BaseDBTestCase):
         with session_manager() as session:
             post = session.query(Post).one()
             self.assertEqual(post.name, submission.name)
+            self.assertEqual(post.image.file_hash, FILE_HASH)
+            self.assertEqual(post.image.file_name, FILE_HASH + '.jpg')
 
 
 class TestScrape(BaseDBTestCase):
@@ -127,3 +130,15 @@ class TestScrape(BaseDBTestCase):
     def test_scrape_post_exists(self, fake_get_new):
         fake_get_new.side_effect = [[FakeSubmission(name=self.post_name)], []]
         reddit_scraper.scrape(self.subreddit_name)
+
+    @mock.patch.object(Subreddit, 'get_new')
+    @mock.patch.object(ImgurClient, 'get_image')
+    @mock.patch('reddit_scraper.requests.get')
+    def test_scrape_image_exists(self, fake_get, fake_get_image, fake_get_new):
+        fake_get.side_effect = _fake_get
+        fake_get_new.side_effect = [[FakeSubmission(name='blerg')], []]
+        fake_get_image.return_value = FakeImage()
+        reddit_scraper.scrape(self.subreddit_name)
+        with session_manager() as session:
+            image = session.query(Image).one()
+            self.assertEqual(image.file_hash, self.image_file_hash)
