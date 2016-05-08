@@ -9,6 +9,7 @@ import unittest
 from datetime import datetime, timedelta
 
 from imgurpython import ImgurClient
+from imgurpython.helpers.error import ImgurClientError
 
 from praw.objects import Subreddit
 
@@ -72,6 +73,10 @@ class FakeResponse(object):
 
 def _fake_get(*args, **kwargs):
     return FakeResponse()
+
+
+def _imgur_error(imgur_id):
+    raise ImgurClientError('blah')
 
 
 class TestDBInit(unittest.TestCase):
@@ -169,3 +174,12 @@ class TestScrape(BaseDBTestCase):
             [FakeSubmission(name='blerg', url='http://blah.com/img.jpg')], []]
         reddit_scraper.scrape(self.subreddit_name)
         fake_get_image.assert_not_called()
+
+    @mock.patch.object(Subreddit, 'get_new')
+    @mock.patch.object(ImgurClient, 'get_image')
+    @mock.patch('reddit_scraper._download_and_save_image')
+    def test_scrape_imgur_error(self, fake_save, fake_get_image, fake_get_new):
+        fake_get_new.side_effect = [[FakeSubmission(name='blerg')], []]
+        fake_get_image.side_effect = _imgur_error
+        reddit_scraper.scrape(self.subreddit_name)
+        fake_save.assert_not_called()

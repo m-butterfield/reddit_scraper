@@ -84,6 +84,7 @@ def _scrape(session, subreddit, subreddit_name, imgur_client):
                                imgur_client,
                                subreddit_name,
                                datetime.fromtimestamp(submission.created_utc))
+            session.commit()
         submissions = [s for s in subreddit.get_new(
             limit=PAGINATION_LIMIT, params={'before': submission.name})]
     print "Subreddit {} up to date...".format(subreddit_name)
@@ -100,6 +101,16 @@ def _handle_submission(session,
                        imgur_client,
                        subreddit_name,
                        created):
+    imgur_image = _get_imgur_image(session, submission, imgur_client)
+    if imgur_image is None:
+        return
+    image = _download_and_save_image(session, imgur_image, submission, created)
+    if image is None:
+        return
+    _save_post(session, submission, image, created, subreddit_name)
+
+
+def _get_imgur_image(session, submission, imgur_client):
     if _get_post(session, submission.name) is not None:
         print "Post {} already saved...".format(submission.name)
         return
@@ -112,11 +123,17 @@ def _handle_submission(session,
 
     image_id = os.path.basename(os.path.splitext(uri.path)[0])
     try:
-        imgur_image = imgur_client.get_image(image_id)
+        return imgur_client.get_image(image_id)
     except ImgurClientError:
         print 'Could not get image from imgur, skipping...'
         return
 
+
+def _get_post(session, submission_id):
+    return session.query(Post).get(submission_id)
+
+
+def _download_and_save_image(session, imgur_image, submission, created):
     response = requests.get(imgur_image.link, stream=True)
     try:
         response.raise_for_status()
@@ -131,18 +148,19 @@ def _handle_submission(session,
             fp.write(chunk)
         fp.seek(0)
         file_hash = _get_file_hash(fp)
-        image = _get_or_create_image(
+        return _get_or_create_image(
             session, fp, imgur_image, file_hash)
-    print "Saving post {}".format(submission.name)
-    session.add(Post(name=submission.name,
-                     image_file_hash=image.file_hash,
-                     submitted=created,
-                     subreddit_name=subreddit_name))
-    session.commit()
 
 
-def _get_post(session, submission_id):
-    return session.query(Post).get(submission_id)
+def _get_file_hash(fp):
+    chunk_size = 1024
+    data = fp.read(chunk_size)
+    file_hash = hashlib.sha1()
+    while data:
+        file_hash.update(data)
+        data = fp.read(chunk_size)
+    fp.seek(0)
+    return file_hash.hexdigest()
 
 
 def _get_or_create_image(session, fp, imgur_image, file_hash):
@@ -165,12 +183,10 @@ def _get_or_create_image(session, fp, imgur_image, file_hash):
     return image
 
 
-def _get_file_hash(fp):
-    chunk_size = 1024
-    data = fp.read(chunk_size)
-    file_hash = hashlib.sha1()
-    while data:
-        file_hash.update(data)
-        data = fp.read(chunk_size)
-    fp.seek(0)
-    return file_hash.hexdigest()
+def _save_post(session, submission, image, created, subreddit_name):
+    print "Saving post {}".format(submission.name)
+    session.add(Post(name=submission.name,
+                     image_file_hash=image.file_hash,
+                     submitted=created,
+                     subreddit_name=subreddit_name))
+    session.flush()
