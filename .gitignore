@@ -1,4 +1,3 @@
-.idea/
-enact
-reddit_scraper
+dist/
 scraped_images/
+vendor/
